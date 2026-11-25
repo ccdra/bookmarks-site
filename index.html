@@ -1,0 +1,1684 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="swiss">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网址收藏</title>
+<style>
+/* ============ 主题：三套视觉方向 ============ */
+[data-theme="swiss"]{
+  --bg:#ffffff; --panel:#ffffff; --ink:#111111; --muted:#6b6b6b; --line:#d9d9d9;
+  --soft:#f4f4f4; --accent:#c8102e; --accent-ink:#ffffff; --radius:0px;
+  --font:"Helvetica Neue","PingFang SC","Hiragino Sans GB",sans-serif;
+  --title-font:"Helvetica Neue","PingFang SC",sans-serif;
+  --shadow:none; --gap:20px;
+}
+[data-theme="editorial"]{
+  --bg:#fbfaf7; --panel:#ffffff; --ink:#1a1a1a; --muted:#6b6459; --line:#e2ddd2;
+  --soft:#f2eee6; --accent:#8c3a28; --accent-ink:#ffffff; --radius:2px;
+  --font:"Songti SC","Source Han Serif SC",Georgia,"PingFang SC",serif;
+  --title-font:"Songti SC",Georgia,serif;
+  --shadow:0 1px 0 rgba(26,26,26,.04); --gap:28px;
+}
+[data-theme="orient"]{
+  --bg:#f7f5f0; --panel:#fffdf9; --ink:#2b2b28; --muted:#8a857c; --line:#ded9cf;
+  --soft:#efece4; --accent:#5a6b5d; --accent-ink:#ffffff; --radius:6px;
+  --font:"PingFang SC","Hiragino Sans GB","Helvetica Neue",sans-serif;
+  --title-font:"PingFang SC","Hiragino Sans GB",sans-serif;
+  --shadow:0 1px 2px rgba(43,43,40,.04); --gap:24px;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+button,input,textarea,select{font:inherit;color:inherit;}
+button{cursor:pointer;background:none;border:none;padding:0;}
+a{color:inherit;}
+::selection{background:var(--accent);color:var(--accent-ink);}
+
+/* ============ 顶栏 ============ */
+.topbar{
+  position:relative;height:66px;flex:none;padding:0 24px;
+  border-bottom:1px solid var(--line);background:var(--bg);
+}
+.topbar .brand{position:absolute;left:24px;top:50%;transform:translateY(-50%);}
+.topright{position:absolute;right:24px;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;gap:18px;}
+.brand{
+  font-family:var(--title-font);font-size:17px;font-weight:600;letter-spacing:.02em;
+  white-space:nowrap;display:flex;align-items:baseline;gap:8px;
+}
+.brand .dot{width:6px;height:6px;background:var(--accent);display:inline-block;}
+[data-theme="swiss"] .brand{text-transform:uppercase;letter-spacing:.14em;font-size:13px;}
+[data-theme="editorial"] .brand{font-size:19px;font-weight:500;}
+[data-theme="orient"] .brand{font-weight:400;letter-spacing:.18em;font-size:15px;}
+
+.searchwrap{position:absolute;left:150px;top:50%;transform:translateY(-50%);
+  width:min(520px,calc(100% - 520px));}
+.searchwrap input{
+  width:100%;padding:9px 34px 9px 12px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--panel);outline:none;
+  transition:border-color .15s;
+}
+.searchwrap input:focus{border-color:var(--ink);}
+[data-theme="swiss"] .searchwrap input{border:none;border-bottom:1px solid var(--ink);border-radius:0;background:transparent;}
+.searchwrap .clear{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:16px;padding:2px 6px;display:none;
+}
+.searchwrap input:not(:placeholder-shown) ~ .clear{display:block;}
+
+.actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+.tbtn{
+  flex:0 0 auto;padding:7px 12px;border:1px solid var(--line);border-radius:var(--radius);
+  font-size:13px;color:var(--ink);background:var(--panel);white-space:nowrap;
+  transition:background .12s,border-color .12s;
+}
+.tbtn:hover{background:var(--soft);}
+.tbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.tbtn.primary:hover{opacity:.9;background:var(--accent);}
+.tbtn.ghost{border-color:transparent;padding:7px 8px;color:var(--muted);}
+.status{
+  flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:6px;
+  padding-right:4px;
+}
+.status .pip{width:7px;height:7px;border-radius:50%;background:var(--line);}
+.status.dirty .pip{background:var(--accent);}
+.status.err .pip{background:#b23a2e;}
+
+/* 主题选择 */
+.themepick{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+.themepick button{padding:6px 10px;font-size:12px;color:var(--muted);border-right:1px solid var(--line);}
+.themepick button:last-child{border-right:none;}
+.themepick button.on{background:var(--ink);color:var(--bg);}
+
+/* ============ 主体 ============ */
+.layout{flex:1;display:flex;min-height:0;}
+
+.sidebar{
+  width:232px;flex:none;border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:18px 0 12px;overflow:hidden;
+}
+.side-head{
+  display:flex;justify-content:space-between;align-items:center;padding:0 18px 10px;
+  font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;
+}
+[data-theme="orient"] .side-head{letter-spacing:.2em;}
+.side-head button{font-size:16px;line-height:1;color:var(--muted);padding:0 2px;}
+.side-head button:hover{color:var(--ink);}
+.catlist{flex:1;overflow-y:auto;padding:0 10px 10px;}
+.cat-row{
+  display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:var(--radius);
+  cursor:pointer;user-select:none;position:relative;color:var(--ink);
+  transition:background .12s;
+}
+.cat-row:hover{background:var(--soft);}
+.cat-row.on{background:var(--ink);color:var(--bg);}
+[data-theme="swiss"] .cat-row.on{border-left:3px solid var(--accent);padding-left:12px;}
+.cat-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;}
+.cat-row .ct{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.cat-row.on .ct{color:var(--bg);opacity:.7;}
+.cat-row .grip{opacity:0;font-size:12px;color:var(--muted);letter-spacing:1px;cursor:grab;}
+.cat-row:hover .grip{opacity:.5;}
+.cat-row.on .grip{color:var(--bg);opacity:.6;}
+.cat-row.drop-target{outline:2px solid var(--accent);outline-offset:-2px;}
+.cat-row.fixed{cursor:default;}
+.cat-row.fixed .grip{display:none;}
+.newcat{
+  margin:8px 18px 0;padding:8px;border:1px dashed var(--line);border-radius:var(--radius);
+  text-align:center;font-size:12.5px;color:var(--muted);
+}
+.newcat:hover{border-color:var(--ink);color:var(--ink);}
+.newcat input{width:100%;border:none;background:transparent;outline:none;text-align:center;font-size:13px;}
+
+.content{flex:1;overflow-y:auto;padding:26px 32px 60px;min-width:0;}
+.content-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+.content-head h1{
+  font-family:var(--title-font);font-size:26px;font-weight:600;margin:0;letter-spacing:-.01em;
+}
+[data-theme="editorial"] .content-head h1{font-size:34px;font-weight:500;}
+[data-theme="orient"] .content-head h1{font-weight:400;letter-spacing:.06em;font-size:24px;}
+.content-head .meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.hint{font-size:12px;color:var(--muted);margin:0 0 20px;line-height:1.6;}
+.hint.search-mode{color:var(--ink);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:var(--gap);}
+.card{
+  position:relative;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);
+  padding:14px 15px 13px;min-height:92px;display:flex;flex-direction:column;
+  cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s;
+  box-shadow:var(--shadow);
+}
+.card:hover{border-color:var(--ink);}
+[data-theme="swiss"] .card:hover{transform:translateY(-1px);}
+[data-theme="editorial"] .card{border:none;border-top:1px solid var(--line);border-radius:0;padding:16px 2px 14px;background:transparent;}
+[data-theme="editorial"] .card:hover{border-color:var(--ink);}
+[data-theme="orient"] .card:hover{box-shadow:0 4px 14px rgba(43,43,40,.07);}
+
+.card .row1{display:flex;align-items:flex-start;gap:9px;}
+.card .ico{
+  width:24px;height:24px;flex:none;border-radius:var(--radius);display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:600;background:var(--soft);color:var(--ink);
+  border:1px solid var(--line);overflow:hidden;
+}
+[data-theme="swiss"] .card .ico{border:none;background:var(--ink);color:var(--bg);border-radius:0;}
+.card .ttl{
+  font-size:14px;font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;
+}
+.card .host{font-size:11.5px;color:var(--muted);margin-top:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.card .note{font-size:12px;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card .tagcat{
+  position:absolute;right:12px;top:12px;font-size:10.5px;color:var(--muted);
+  border:1px solid var(--line);padding:1px 6px;border-radius:99px;max-width:88px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.card .ops{position:absolute;right:8px;bottom:8px;display:none;gap:2px;}
+.card:hover .ops,.card:focus-within .ops{display:flex;}
+.card .ops button{padding:3px 6px;font-size:11.5px;color:var(--muted);border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);}
+.card .ops button:hover{color:var(--ink);border-color:var(--ink);}
+/* 搜索命中 */
+mark{background:transparent;color:inherit;font-weight:700;border-bottom:2px solid var(--accent);}
+
+/* 拖动 */
+.card.dragging{opacity:.35;}
+.placeholder{
+  border:1px dashed var(--accent);border-radius:var(--radius);min-height:92px;
+  background:transparent;
+}
+.drag-ghost{
+  position:fixed;z-index:900;pointer-events:none;opacity:.92;
+  box-shadow:0 18px 40px rgba(0,0,0,.16);transform:rotate(.4deg);
+  border-color:var(--ink)!important;
+}
+.cat-holder{height:0;border-top:2px solid var(--accent);margin:0 10px;}
+
+/* 空状态 */
+.empty{
+  border:1px dashed var(--line);border-radius:var(--radius);padding:56px 24px;text-align:center;color:var(--muted);
+}
+.empty p{margin:0 0 14px;font-size:13px;}
+.empty .tbtn{color:var(--ink);}
+
+/* 搜索结果的分类标签 */
+.card .catlabel{font-size:10.5px;color:var(--muted);}
+
+/* ============ 底栏 ============ */
+.statusbar{
+  flex:none;border-top:1px solid var(--line);padding:9px 24px;display:flex;
+  justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);
+  background:var(--bg);gap:12px;
+}
+.statusbar .left{display:flex;gap:16px;align-items:center;}
+.statusbar .right{display:flex;gap:14px;align-items:center;}
+.statusbar a{text-decoration:none;color:var(--muted);border-bottom:1px solid transparent;}
+.statusbar a:hover{color:var(--ink);border-color:var(--ink);}
+.warnlink{color:var(--accent)!important;}
+
+/* ============ 弹层 ============ */
+.modal{
+  position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
+  background:rgba(20,20,20,.38);padding:24px;
+}
+.modal.open{display:flex;}
+.sheet{
+  width:min(560px,100%);max-height:86vh;overflow:auto;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px 22px;
+  box-shadow:0 24px 60px rgba(0,0,0,.18);
+}
+.sheet.wide{width:min(720px,100%);}
+.sheet h2{margin:0 0 4px;font-family:var(--title-font);font-size:20px;font-weight:600;}
+[data-theme="editorial"] .sheet h2{font-size:24px;font-weight:500;}
+.sheet .sub{font-size:12px;color:var(--muted);margin:0 0 20px;line-height:1.6;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.02em;}
+.field input,.field textarea,.field select{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--bg);outline:none;
+}
+.field input:focus,.field textarea:focus{border-color:var(--ink);}
+.field textarea{resize:vertical;min-height:60px;}
+.field .help{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sheet-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;align-items:center;}
+.sheet-actions .spacer{flex:1;}
+.msg{font-size:12px;color:var(--accent);min-height:16px;}
+
+/* 预览列表 */
+.prev{border:1px solid var(--line);border-radius:var(--radius);max-height:260px;overflow:auto;margin:12px 0;}
+.prev .line{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px;}
+.prev .line:last-child{border-bottom:none;}
+.prev .k{color:var(--muted);}
+.prev .v{font-variant-numeric:tabular-nums;font-weight:600;}
+.snap-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);gap:12px;}
+.snap-item:last-child{border-bottom:none;}
+.snap-item .info{font-size:12.5px;}
+.snap-item .info .t{color:var(--muted);font-size:11.5px;margin-top:3px;}
+.snap-item button{padding:5px 10px;border:1px solid var(--line);border-radius:var(--radius);font-size:12px;}
+.snap-item button:hover{border-color:var(--ink);}
+.snap-item.disabled{opacity:.45;}
+.snap-item.disabled button{pointer-events:none;}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:42px;transform:translate(-50%,12px);opacity:0;
+  background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:var(--radius);
+  font-size:12.5px;z-index:1200;pointer-events:none;transition:opacity .18s,transform .18s;
+  max-width:80vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+
+/* 主题细化 */
+[data-theme="orient"] .cat-row.on{background:#E8E9E1;color:var(--ink);box-shadow:inset 3px 0 0 var(--accent);}
+[data-theme="orient"] .cat-row.on .ct,
+[data-theme="orient"] .cat-row.on .grip{color:var(--muted);opacity:.8;}
+[data-theme="orient"] .card{border-color:transparent;box-shadow:0 1px 2px rgba(43,43,40,.05);}
+[data-theme="orient"] .card:hover{border-color:transparent;box-shadow:0 6px 18px rgba(43,43,40,.08);}
+[data-theme="orient"] .card .ico{border-radius:50%;background:#EDEAE2;border:none;color:#5a6b5d;}
+[data-theme="editorial"] .card:hover .ttl{color:var(--accent);}
+[data-theme="swiss"] .card .ttl{font-size:14.5px;}
+[data-theme="swiss"] .content-head h1{letter-spacing:-.02em;}
+
+/* 细分隔线 */
+hr.rule{border:none;border-top:1px solid var(--line);margin:20px 0;}
+
+@media (max-width:1100px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+  .content{padding:22px 24px 50px;}
+}
+@media (max-width:860px){
+  .layout{flex-direction:column;}
+  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--line);max-height:230px;}
+  .catlist{display:flex;flex-wrap:wrap;gap:4px;}
+  .cat-row{width:auto;min-width:120px;}
+  .topbar{height:auto;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
+  .topbar .brand{position:static;transform:none;}
+  .topright{position:static;transform:none;margin-left:auto;gap:10px;}
+  .searchwrap{position:static;transform:none;width:100%;order:3;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="dot"></span>网址收藏</div>
+  <div class="searchwrap">
+    <input id="search" type="search" placeholder="搜索标题、网址、备注、分类" autocomplete="off" spellcheck="false">
+    <button class="clear" id="searchClear" title="清空搜索">×</button>
+  </div>
+  <div class="topright">
+    <div class="status" id="status" title="数据状态">
+      <span class="pip"></span><span id="statusText">已保存</span>
+    </div>
+    <div class="actions">
+    <button class="tbtn" id="btnAdd">添加网址</button>
+    <button class="tbtn ghost" id="btnData">数据</button>
+      <button class="tbtn ghost" id="btnSync">同步</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-head">
+      <span>分类</span>
+      <button id="btnNewCat" title="新建分类" aria-label="新建分类">＋</button>
+    </div>
+    <div class="catlist" id="catlist"></div>
+    <div class="newcat" id="newcatBox" hidden><input id="newcatInput" maxlength="20" placeholder="分类名称，回车创建"></div>
+  </aside>
+
+  <main class="content" id="content">
+    <div class="content-head">
+      <h1 id="viewTitle">全部</h1>
+      <span class="meta" id="viewMeta"></span>
+    </div>
+    <p class="hint" id="viewHint">拖动卡片调整顺序；把卡片拖到左侧分类上，即移入该分类。</p>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<footer class="statusbar">
+  <div class="left">
+    <span id="footCount">0 条</span>
+    <span id="footBackup">尚未落盘</span>
+  </div>
+  <div class="right">
+    <div class="themepick" id="themePick" title="切换视觉方向">
+      <button data-theme="swiss" class="on">瑞士</button>
+      <button data-theme="editorial">编辑</button>
+      <button data-theme="orient">温润</button>
+    </div>
+  </div>
+</footer>
+
+<!-- 添加/编辑网址 -->
+<div class="modal" id="dlgLink">
+  <div class="sheet">
+    <h2 id="dlgLinkTitle">添加网址</h2>
+    <p class="sub">网址必填，标题留空时用域名。</p>
+    <div class="field">
+      <label for="fUrl">网址</label>
+      <input id="fUrl" placeholder="https://example.com" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="fTitle">标题</label>
+      <input id="fTitle" placeholder="留空自动取域名" maxlength="80">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="fCat">分类</label>
+        <select id="fCat"></select>
+      </div>
+      <div class="field">
+        <label for="fNote">备注</label>
+        <input id="fNote" placeholder="选填" maxlength="80">
+      </div>
+    </div>
+    <div class="msg" id="dlgLinkMsg"></div>
+    <div class="sheet-actions">
+      <button class="tbtn" data-close>取消</button>
+      <button class="tbtn primary" id="btnSaveLink">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认 -->
+<div class="modal" id="dlgConfirm">
+  <div class="sheet" style="width:min(460px,100%)">
+    <h2 id="cfTitle">确认</h2>
+    <p class="sub" id="cfText"></p>
+    <div class="sheet-actions" id="cfActions"></div>
+  </div>
+</div>
+
+<!-- 数据：导入导出、快照、落盘 -->
+<div class="modal" id="dlgData">
+  <div class="sheet wide">
+    <h2>数据</h2>
+    <p class="sub">所有数据保存在本机。导出会同时写入一份本地快照。</p>
+
+    <div class="row2">
+      <div class="field">
+        <label>导出</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tbtn" id="btnExport">导出 JSON</button>
+          <button class="tbtn" id="btnImport">导入 JSON</button>
+          <input type="file" id="fileImport" accept=".json,application/json" hidden>
+        </div>
+        <div class="help" id="exportHelp">文件名：网址收藏-日期-时分.json</div>
+      </div>
+      <div class="field">
+        <label>自动落盘（本机文件）</label>
+        <button class="tbtn" id="btnPickDir">选择备份文件夹</button>
+        <div class="help" id="dirHelp">仅 Chrome / Edge 支持；Safari 只能手动导出。</div>
+      </div>
+    </div>
+
+    <hr class="rule">
+    <div class="field" style="margin-bottom:6px">
+      <label>本地快照（最近 10 份）</label>
+    </div>
+    <div id="snapList" class="prev" style="max-height:220px"></div>
+
+    <hr class="rule">
+    <div class="field" style="margin-bottom:0">
+      <label>说明</label>
+      <div class="help">落盘写的是同一块磁盘，防误删、防手抖，不防磁盘损坏与换机。真正的异地副本靠同步通道。</div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="tbtn" data-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 同步配置 -->
+<div class="modal" id="dlgSync">
+  <div class="sheet wide">
+    <h2>同步通道</h2>
+    <p class="sub">读写 GitHub 私有仓库里的一个 JSON 文件。读随时，写每日一次。</p>
+
+    <div class="field">
+      <label><input type="checkbox" id="syncOn" style="width:auto;margin-right:6px"> 启用 GitHub 同步</label>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="sOwner">仓库所有者</label>
+        <input id="sOwner" placeholder="用户名或组织" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="sRepo">仓库名</label>
+        <input id="sRepo" placeholder="bookmarks-private" spellcheck="false">
+      </div>
+    </div>
+    <div class="field">
+      <label for="sPath">文件路径</label>
+      <input id="sPath" value="bookmarks.json" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="sToken">访问令牌（细粒度，仅该仓库 contents 读写）</label>
+      <input id="sToken" type="password" placeholder="github_pat_..." spellcheck="false">
+      <div class="help">令牌只存在本机浏览器，不写进页面源码。换浏览器需要重新填一次。仓库要先有一次提交（建仓库时勾 Add a README）。</div>
+    </div>
+
+    <div class="prev" id="syncState"></div>
+
+    <div class="msg" id="syncMsg"></div>
+    <div class="sheet-actions">
+      <button class="tbtn" data-close>关闭</button>
+      <span class="spacer"></span>
+      <button class="tbtn" id="btnSyncPull">拉取</button>
+      <button class="tbtn primary" id="btnSyncPush">立即同步</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+// ============================================================
+// 常量与工具
+// ============================================================
+const KEY_DATA = "bm.data.v1";
+const KEY_SET  = "bm.settings.v1";
+const IDB_NAME = "bm-snapshots";
+const IDB_STORE = "snaps";
+
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const nowISO = () => new Date().toISOString();
+const uid = p => p + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const normUrl = u => {
+  try{
+    const x = new URL(u.trim());
+    return (x.host + x.pathname + x.search).replace(/\/$/,"").toLowerCase();
+  }catch(e){ return String(u||"").trim().toLowerCase(); }
+};
+const hostOf = u => { try{ return new URL(u).host.replace(/^www\./,""); }catch(e){ return u; } };
+const initialOf = u => {
+  const h = hostOf(u);
+  return (h[0] || "?").toUpperCase();
+};
+const fmtTime = iso => {
+  const d = new Date(iso);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+};
+const clampDate = d => {
+  const x = new Date(d);
+  return `${x.getMonth()+1}月${x.getDate()}日`;
+};
+
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+// ============================================================
+// 状态
+// ============================================================
+let data = { schemaVersion:1, categories:[], links:[] };
+let settings = {
+  theme:"swiss", dirName:"", lastWrittenAt:0, dirty:false,
+  github:{ enabled:false, owner:"", repo:"", path:"bookmarks.json", token:"", lastPushedDate:"", baseData:null }
+};
+let view = { type:"all", id:null, query:"" };
+let drag = null;
+let suppressClick = false;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY_DATA);
+    if(raw){
+      const p = JSON.parse(raw);
+      if(p && Array.isArray(p.categories) && Array.isArray(p.links)) data = {
+        schemaVersion:1,
+        categories: p.categories.map(c=>({id:c.id,name:c.name,order:+c.order||0,createdAt:c.createdAt||nowISO()})),
+        links: p.links.map(l=>({id:l.id,categoryId:l.categoryId??null,url:l.url,title:l.title||"",note:l.note||"",
+          order:+l.order||0,createdAt:l.createdAt||nowISO(),updatedAt:l.updatedAt||l.createdAt||nowISO()}))
+      };
+    }
+    const s = localStorage.getItem(KEY_SET);
+    if(s) settings = Object.assign(settings, JSON.parse(s), { github: Object.assign(settings.github, (JSON.parse(s).github||{})) });
+  }catch(e){
+    toast("本机存储不可用，改动不会被保存");
+  }
+}
+let saveTimer = null;
+function persist(immediate){
+  clearTimeout(saveTimer);
+  const write = () => {
+    try{
+      localStorage.setItem(KEY_DATA, JSON.stringify(data));
+    }catch(e){ toast("写入本机存储失败"); }
+  };
+  if(immediate) write(); else saveTimer = setTimeout(write, 300);
+}
+function persistSettings(){
+  try{ localStorage.setItem(KEY_SET, JSON.stringify(settings)); }catch(e){}
+}
+function touch(immediate){
+  settings.dirty = true;
+  persist(immediate === true);
+  renderStatus();
+  scheduleSnapshot();
+  scheduleAutosave();
+}
+
+// ============================================================
+// 快照（IndexedDB）
+// ============================================================
+let dbp = null;
+function idb(){
+  if(dbp) return dbp;
+  dbp = new Promise((res, rej)=>{
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, {keyPath:"id", autoIncrement:true});
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return dbp;
+}
+async function snapAdd(reason, payload){
+  try{
+    const db = await idb();
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    const st = tx.objectStore(IDB_STORE);
+    st.add({ at: nowISO(), reason, data: JSON.stringify(payload || data) });
+    await new Promise((res, rej)=>{ tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    const all = await snapAll();
+    if(all.length > 10){
+      const db2 = await idb();
+      const tx2 = db2.transaction(IDB_STORE, "readwrite");
+      const st2 = tx2.objectStore(IDB_STORE);
+      all.slice(10).forEach(s => st2.delete(s.id));
+    }
+  }catch(e){}
+}
+function snapAll(){
+  return idb().then(db=>new Promise((res)=>{
+    const tx = db.transaction(IDB_STORE, "readonly");
+    const st = tx.objectStore(IDB_STORE);
+    const rq = st.getAll();
+    rq.onsuccess = ()=> res((rq.result||[]).sort((a,b)=> b.at.localeCompare(a.at)));
+    rq.onerror = ()=> res([]);
+  })).catch(()=>[]);
+}
+let snapTimer = null;
+function scheduleSnapshot(){
+  clearTimeout(snapTimer);
+  snapTimer = setTimeout(()=>{ snapAdd("自动"); }, 3000);
+}
+
+// ============================================================
+// 渲染：侧栏
+// ============================================================
+function catsSorted(){ return [...data.categories].sort((a,b)=>a.order-b.order); }
+function linksOf(cid){
+  return data.links.filter(l => (cid === "uncat" ? (l.categoryId === null || l.categoryId === undefined) : l.categoryId === cid))
+                   .sort((a,b)=>a.order-b.order);
+}
+function catName(cid){
+  if(cid === null || cid === undefined) return "未分类";
+  const c = data.categories.find(x=>x.id===cid);
+  return c ? c.name : "未分类";
+}
+function renderSidebar(){
+  const el = $("#catlist");
+  const all = data.links.length;
+  const uncat = linksOf("uncat").length;
+  const rows = [
+    `<div class="cat-row fixed ${view.type==='all'?'on':''}" data-view="all" role="button" tabindex="0">
+        <span class="nm">全部</span><span class="ct">${all}</span></div>`,
+    `<div class="cat-row fixed ${view.type==='uncat'?'on':''}" data-view="uncat" role="button" tabindex="0">
+        <span class="nm">未分类</span><span class="ct">${uncat}</span></div>`
+  ];
+  for(const c of catsSorted()){
+    const n = linksOf(c.id).length;
+    const on = view.type==='cat' && view.id===c.id;
+    rows.push(`<div class="cat-row ${on?'on':''}" data-cat="${esc(c.id)}" data-view="cat" role="button" tabindex="0">
+        <span class="nm" title="${esc(c.name)}">${esc(c.name)}</span>
+        <span class="grip" title="拖动排序">⋮⋮</span>
+        <span class="ct">${n}</span></div>`);
+  }
+  el.innerHTML = rows.join("");
+}
+
+// ============================================================
+// 渲染：主区
+// ============================================================
+function highlight(text, q){
+  const s = esc(text||"");
+  if(!q) return s;
+  const e = esc(q).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  return s.replace(new RegExp(e,"gi"), m=>`<mark>${m}</mark>`);
+}
+function cardHTML(l, opts={}){
+  const title = l.title || hostOf(l.url) || l.url;
+  return `<article class="card" data-id="${esc(l.id)}" tabindex="0" role="link" aria-label="${esc(title)}">
+    <div class="row1">
+      <div class="ico" aria-hidden="true">${esc(initialOf(l.url))}</div>
+      <div class="ttl">${highlight(title, opts.q)}</div>
+    </div>
+    <div class="host">${highlight(hostOf(l.url), opts.q)}</div>
+    ${l.note?`<div class="note">${highlight(l.note, opts.q)}</div>`:""}
+    ${opts.showCat?`<span class="tagcat">${esc(catName(l.categoryId))}</span>`:""}
+    <div class="ops">
+      <button data-act="edit" title="编辑">编辑</button>
+      <button data-act="del" title="删除">删除</button>
+    </div>
+  </article>`;
+}
+function renderContent(){
+  const grid = $("#grid");
+  const titleEl = $("#viewTitle"), metaEl = $("#viewMeta"), hintEl = $("#viewHint");
+  let list = [], name = "全部", showCat = false, hint = "拖动卡片调整顺序；把卡片拖到左侧分类上，即移入该分类。";
+
+  if(view.type === "search" && view.query){
+    const q = view.query.toLowerCase();
+    list = data.links.filter(l=>{
+      const cn = catName(l.categoryId);
+      return (l.title||"").toLowerCase().includes(q) || l.url.toLowerCase().includes(q)
+        || (l.note||"").toLowerCase().includes(q) || cn.toLowerCase().includes(q);
+    }).sort((a,b)=> a.order-b.order);
+    name = `搜索：${view.query}`; showCat = true; hint = "搜索结果只读，清空搜索后可继续排序。";
+    hintEl.classList.add("search-mode");
+  } else if(view.type === "cat"){
+    const c = data.categories.find(x=>x.id===view.id);
+    if(!c){ view = {type:"all",id:null,query:""}; return renderAll(); }
+    list = linksOf(c.id); name = c.name;
+  } else if(view.type === "uncat"){
+    list = linksOf("uncat"); name = "未分类";
+  } else {
+    list = [...data.links].sort((a,b)=>{
+      const ca = catsSorted(); const ai = ca.findIndex(x=>x.id===a.categoryId), bi = ca.findIndex(x=>x.id===b.categoryId);
+      return (ai<0?999:ai) - (bi<0?999:bi) || a.order-b.order;
+    });
+    showCat = true;
+  }
+  document.title = name === "全部" ? "网址收藏" : `${name} · 网址收藏`;
+  titleEl.textContent = name;
+  metaEl.textContent = `${list.length} 条`;
+  hintEl.textContent = hint;
+
+  if(!list.length){
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <p>${view.type==='search' ? '没有匹配的网址，换个词试试。' : '这里还没有网址。'}</p>
+      ${view.type==='search' ? '<button class="tbtn" id="emptyClear">清空搜索</button>' : '<button class="tbtn" id="emptyAdd">添加第一个网址</button>'}
+    </div>`;
+    const b = $("#emptyClear"); if(b) b.onclick = ()=> setSearch("");
+    const a = $("#emptyAdd"); if(a) a.onclick = ()=> openLink(null);
+    return;
+  }
+  grid.innerHTML = list.map(l=>cardHTML(l, {q: view.type==='search'?view.query:"", showCat})).join("");
+}
+
+function renderStatus(){
+  const st = $("#status"), txt = $("#statusText");
+  st.classList.remove("dirty","err");
+  const gh = settings.github.enabled;
+  if(settings.lastError){ st.classList.add("err"); txt.textContent = settings.lastError; return; }
+  if(settings.dirty){
+    st.classList.add("dirty");
+    txt.textContent = gh ? "有未同步改动" : "未落盘";
+  } else {
+    txt.textContent = gh ? "已同步" : "已保存";
+  }
+  // 底栏
+  $("#footCount").textContent = `${data.links.length} 条 · ${data.categories.length} 个分类`;
+  const ft = $("#footBackup");
+  if(gh){
+    ft.textContent = settings.github.lastPushedDate ? `上次同步 ${settings.github.lastPushedDate}` : "尚未同步";
+  }else if(settings.dirName){
+    ft.textContent = settings.dirty ? "有改动待落盘" : "已落盘到文件夹";
+  }else{
+    ft.textContent = settings.lastWrittenAt ? `上次导出 ${clampDate(settings.lastWrittenAt)}` : "尚未落盘";
+  }
+  ft.classList.toggle("warnlink", settings.dirty);
+}
+
+function renderAll(){ renderSidebar(); renderContent(); renderStatus(); syncCatOptions(); }
+
+// ============================================================
+// 视图切换 / 搜索
+// ============================================================
+function setView(v){
+  view = v; renderSidebar(); renderContent();
+  const q = $("#search"); if(v.type!=="search" && q.value) q.value = "";
+}
+let searchTimer = null;
+function setSearch(q){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>{
+    if(!q.trim()){ setView({type:"all",id:null,query:""}); return; }
+    view = {type:"search", id:null, query:q.trim()};
+    renderSidebar(); renderContent();
+  }, 200);
+}
+
+// ============================================================
+// 分类操作
+// ============================================================
+function catOrderNext(){ return (catsSorted().slice(-1)[0]?.order || 0) + 100; }
+function linkOrderNext(cid){ const l = linksOf(cid); return (l.slice(-1)[0]?.order || 0) + 100; }
+
+function newCategory(name){
+  const n = name.trim();
+  if(!n) return false;
+  if(data.categories.some(c=>c.name.trim().toLowerCase() === n.toLowerCase())){
+    toast("分类名已存在"); return false;
+  }
+  data.categories.push({id:uid("c_"), name:n.slice(0,20), order:catOrderNext(), createdAt:nowISO()});
+  touch(true); renderAll(); return true;
+}
+function renameCategory(id, name){
+  const n = name.trim(); if(!n) return;
+  if(data.categories.some(c=>c.id!==id && c.name.trim().toLowerCase()===n.toLowerCase())){ toast("分类名已存在"); return; }
+  const c = data.categories.find(x=>x.id===id); if(!c) return;
+  c.name = n.slice(0,20); touch(true); renderAll();
+}
+function deleteCategory(id){
+  const c = data.categories.find(x=>x.id===id); if(!c) return;
+  const count = linksOf(id).length;
+  const done = (mode)=>{
+    if(mode === "delete"){
+      data.links = data.links.filter(l=>l.categoryId !== id);
+    } else {
+      data.links.forEach(l=>{ if(l.categoryId === id) l.categoryId = null; });
+    }
+    data.categories = data.categories.filter(x=>x.id !== id);
+    if(view.type==='cat' && view.id===id) view = {type:"all",id:null,query:""};
+    touch(true); renderAll(); closeModal("#dlgConfirm");
+    toast(mode==="delete" ? `已删除分类及 ${count} 条网址` : `已移到未分类，共 ${count} 条`);
+  };
+  if(!count){ done("keep"); return; }
+  confirmDialog("删除分类", `“${c.name}”下有 ${count} 条网址，怎么处理？`, [
+    {label:"移到未分类", primary:true, act:()=>done("keep")},
+    {label:"一并删除", danger:true, act:()=>done("delete")},
+    {label:"取消", act:()=>closeModal("#dlgConfirm")}
+  ]);
+}
+
+// ============================================================
+// 网址操作
+// ============================================================
+function normalizeInputUrl(v){
+  let s = String(v||"").trim();
+  if(!s) return "";
+  if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(s)) s = "https://" + s;
+  return s;
+}
+function addLink(obj){
+  data.links.push({
+    id:uid("l_"), categoryId:obj.categoryId ?? null,
+    url:obj.url, title:(obj.title||"").slice(0,120), note:(obj.note||"").slice(0,120),
+    order:linkOrderNext(obj.categoryId ?? null), createdAt:nowISO(), updatedAt:nowISO()
+  });
+  touch(true);
+}
+function updateLink(id, obj){
+  const l = data.links.find(x=>x.id===id); if(!l) return;
+  const catChanged = (l.categoryId ?? null) !== (obj.categoryId ?? null);
+  Object.assign(l, {url:obj.url, title:(obj.title||"").slice(0,120), note:(obj.note||"").slice(0,120),
+    categoryId:obj.categoryId ?? null, updatedAt:nowISO()});
+  if(catChanged) l.order = linkOrderNext(obj.categoryId ?? null);
+  touch(true);
+}
+function deleteLink(id){
+  const l = data.links.find(x=>x.id===id); if(!l) return;
+  confirmDialog("删除网址", `确定删除“${l.title || hostOf(l.url)}”？`, [
+    {label:"删除", danger:true, act:()=>{
+      data.links = data.links.filter(x=>x.id!==id);
+      closeModal("#dlgConfirm"); touch(true); renderAll(); toast("已删除");
+    }},
+    {label:"取消", act:()=>closeModal("#dlgConfirm")}
+  ]);
+}
+
+// ============================================================
+// 弹层基础
+// ============================================================
+let lastFocus = null;
+function openModal(sel){
+  lastFocus = document.activeElement;
+  const m = $(sel); m.classList.add("open");
+  const f = m.querySelector("input:not([type=checkbox]):not([type=file]), textarea");
+  if(f) setTimeout(()=>f.focus(), 40);
+}
+function closeModal(sel){
+  $(sel).classList.remove("open");
+  if(lastFocus && lastFocus.focus) lastFocus.focus();
+}
+function confirmDialog(title, text, actions){
+  $("#cfTitle").textContent = title;
+  $("#cfText").textContent = text;
+  const wrap = $("#cfActions"); wrap.innerHTML = "";
+  actions.forEach(a=>{
+    const b = document.createElement("button");
+    b.className = "tbtn" + (a.primary?" primary":"");
+    if(a.danger) b.style.color = "var(--accent)", b.style.borderColor = "var(--accent)";
+    b.textContent = a.label; b.onclick = a.act;
+    wrap.appendChild(b);
+  });
+  openModal("#dlgConfirm");
+}
+
+// 添加/编辑弹层
+let editingId = null;
+function syncCatOptions(){
+  const sel = $("#fCat"); if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">未分类</option>` + catsSorted().map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  if(cur && [...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
+function openLink(id){
+  editingId = id;
+  $("#dlgLinkTitle").textContent = id ? "编辑网址" : "添加网址";
+  $("#dlgLinkMsg").textContent = "";
+  const l = id ? data.links.find(x=>x.id===id) : null;
+  $("#fUrl").value = l ? l.url : "";
+  $("#fTitle").value = l ? l.title : "";
+  $("#fNote").value = l ? l.note : "";
+  syncCatOptions();
+  $("#fCat").value = l ? (l.categoryId || "") : (view.type==="cat" ? view.id : "");
+  openModal("#dlgLink");
+  if(!id) setTimeout(()=>$("#fUrl").focus(), 50);
+}
+function saveLink(){
+  const raw = $("#fUrl").value.trim();
+  const msg = $("#dlgLinkMsg");
+  if(!raw){ msg.textContent = "请填写网址"; return; }
+  const u = normalizeInputUrl(raw);
+  try{
+    const x = new URL(u);
+    if(!/^https?:$/.test(x.protocol)) throw 0;
+  }catch(e){ msg.textContent = "只支持 http / https 网址"; return; }
+  const cid = $("#fCat").value || null;
+  const title = $("#fTitle").value.trim() || hostOf(u);
+  const note = $("#fNote").value.trim();
+  const dup = data.links.find(l=> (l.categoryId??null)===(cid??null) && normUrl(l.url)===normUrl(u) && l.id!==editingId );
+  const proceed = ()=>{
+    if(editingId) updateLink(editingId, {url:u, title, note, categoryId:cid});
+    else addLink({url:u, title, note, categoryId:cid});
+    closeModal("#dlgLink"); renderAll(); toast(editingId ? "已保存" : "已添加");
+  };
+  if(dup){
+    confirmDialog("已存在", "这个分类里已有相同网址，仍要添加吗？", [
+      {label:"仍要添加", primary:true, act:()=>{ closeModal("#dlgConfirm"); proceed(); }},
+      {label:"取消", act:()=>closeModal("#dlgConfirm")}
+    ]);
+    return;
+  }
+  proceed();
+}
+
+// ============================================================
+// 拖动排序
+// ============================================================
+function startDrag(e, kind, id, el){
+  if(e.button !== undefined && e.button !== 0) return;
+  drag = {kind, id, el, x0:e.clientX, y0:e.clientY, active:false, ph:null, ghost:null, startOrder:null, targetCat:null};
+  window.addEventListener("pointermove", onDragMove, {passive:false});
+  window.addEventListener("pointerup", onDragEnd);
+  window.addEventListener("pointercancel", onDragEnd);
+}
+function activateDrag(){
+  const d = drag;
+  d.active = true;
+  suppressClick = true;
+  const r = d.el.getBoundingClientRect();
+  d.ghost = d.el.cloneNode(true);
+  d.ghost.classList.add("drag-ghost");
+  d.ghost.style.width = r.width + "px";
+  d.ghost.style.left = r.left + "px";
+  d.ghost.style.top = r.top + "px";
+  d.ghost.style.height = r.height + "px";
+  d.el.classList.add("dragging");
+  document.body.appendChild(d.ghost);
+  d.offX = d.x0 - r.left; d.offY = d.y0 - r.top;
+
+  if(d.kind === "link"){
+    d.ph = document.createElement("div");
+    d.ph.className = "placeholder";
+    d.ph.style.height = r.height + "px";
+    d.el.parentNode.insertBefore(d.ph, d.el);
+  } else {
+    d.ph = document.createElement("div");
+    d.ph.className = "cat-holder";
+    d.el.parentNode.insertBefore(d.ph, d.el.nextSibling);
+  }
+}
+function onDragMove(e){
+  if(!drag) return;
+  const d = drag;
+  if(!d.active){
+    if(Math.hypot(e.clientX-d.x0, e.clientY-d.y0) < 7) return;
+    activateDrag();
+  }
+  e.preventDefault();
+  d.ghost.style.left = (e.clientX - d.offX) + "px";
+  d.ghost.style.top  = (e.clientY - d.offY) + "px";
+
+  if(d.kind === "link"){
+    d.targetCat = null;
+    $$(".cat-row").forEach(r=>r.classList.remove("drop-target"));
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    if(!under) return;
+    const catRow = under.closest(".cat-row[data-cat]");
+    if(catRow){
+      catRow.classList.add("drop-target");
+      d.targetCat = catRow.dataset.cat;
+      return;
+    }
+    const grid = $("#grid");
+    const cards = Array.from(grid.querySelectorAll(".card[data-id]")).filter(c=>c!==d.el);
+    if(cards.length){
+      let best=null, bd=Infinity;
+      for(const c of cards){
+        const r=c.getBoundingClientRect();
+        const dist=Math.hypot(e.clientX-(r.left+r.width/2), e.clientY-(r.top+r.height/2));
+        if(dist<bd){ bd=dist; best=c; }
+      }
+      if(best){
+        const r=best.getBoundingClientRect();
+        const after = e.clientY > r.top + r.height*0.5;
+        if(after){ if(d.ph.nextElementSibling !== best.nextElementSibling || d.ph.parentNode!==grid) grid.insertBefore(d.ph, best.nextSibling); }
+        else { if(best !== d.ph.nextElementSibling) grid.insertBefore(d.ph, best); }
+        return;
+      }
+    }
+    if(under.closest("#grid") && d.ph.parentNode !== grid){
+      grid.appendChild(d.ph);
+    }
+  } else {
+    const row = document.elementFromPoint(e.clientX, e.clientY)?.closest(".cat-row[data-cat]");
+    if(row && row !== d.el && !row.classList.contains("dragging")){
+      const r = row.getBoundingClientRect();
+      const before = e.clientY < r.top + r.height/2;
+      row.parentNode.insertBefore(d.ph, before ? row : row.nextSibling);
+    }
+  }
+}
+function onDragEnd(e){
+  window.removeEventListener("pointermove", onDragMove);
+  window.removeEventListener("pointerup", onDragEnd);
+  window.removeEventListener("pointercancel", onDragEnd);
+  const d = drag; drag = null;
+  if(!d) return;
+  if(!d.active){
+    return;
+  }
+  suppressClick = true;
+  setTimeout(()=>{ suppressClick = false; }, 260);
+
+  if(d.ghost) d.ghost.remove();
+  d.el.classList.remove("dragging");
+  $$(".cat-row").forEach(r=>r.classList.remove("drop-target"));
+
+  if(d.kind === "link"){
+    const moved = d.targetCat;
+    if(moved){
+      const l = data.links.find(x=>x.id===d.id);
+      if(l){ l.categoryId = moved; l.order = linkOrderNext(moved); l.updatedAt = nowISO(); }
+    } else {
+      const ph = d.ph;
+      let idx = 0;
+      if(ph && ph.parentNode){
+        let prev = ph.previousElementSibling;
+        while(prev){
+          if(prev.classList && prev.classList.contains("card") && prev !== d.el) idx++;
+          prev = prev.previousElementSibling;
+        }
+        ph.remove();
+      }
+      applyLinkOrder(idx, d.id);
+    }
+    if(d.ph) d.ph.remove();
+  } else {
+    const ph = d.ph;
+    let idx = 0;
+    if(ph && ph.parentNode){
+      let prev = ph.previousElementSibling;
+      while(prev){
+        if(prev.classList && prev.classList.contains("cat-row") && prev.dataset.cat && prev !== d.el) idx++;
+        prev = prev.previousElementSibling;
+      }
+      ph.remove();
+    }
+    applyCatOrder(idx, d.id);
+  }
+  touch(true); renderAll();
+}
+function applyCatOrder(idx, id){
+  const list = catsSorted().filter(c=>c.id!==id);
+  idx = Math.max(0, Math.min(idx, list.length));
+  const c = data.categories.find(x=>x.id===id); if(!c) return;
+  list.splice(idx, 0, c);
+  list.forEach((x,i)=> x.order = (i+1)*100);
+}
+function applyLinkOrder(idx, id){
+  const l = data.links.find(x=>x.id===id); if(!l) return;
+  const cid = l.categoryId ?? null;
+  const list = linksOf(cid).filter(x=>x.id!==id);
+  idx = Math.max(0, Math.min(idx, list.length));
+  list.splice(idx, 0, l);
+  list.forEach((x,i)=> x.order = (i+1)*100);
+}
+
+// ============================================================
+// 导出 / 导入
+// ============================================================
+function exportJSON(silent){
+  const payload = {
+    schemaVersion:1, app:"local-bookmarks", exportedAt:nowISO(),
+    categories:data.categories.map(c=>({id:c.id,name:c.name,order:c.order,createdAt:c.createdAt})),
+    links:data.links.map(l=>({id:l.id,categoryId:l.categoryId,url:l.url,title:l.title,note:l.note,
+      order:l.order,createdAt:l.createdAt,updatedAt:l.updatedAt}))
+  };
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}`;
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `网址收藏-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  settings.lastWrittenAt = Date.now(); settings.dirty = false; persistSettings(); renderStatus();
+  snapAdd("手动");
+  if(!silent) toast("已导出 JSON");
+  return payload;
+}
+
+function validateImport(obj){
+  if(!obj || typeof obj !== "object") return "不是有效的 JSON 对象";
+  if(!Array.isArray(obj.categories) || !Array.isArray(obj.links)) return "缺少 categories 或 links";
+  if(obj.schemaVersion && obj.schemaVersion > 1) return "文件版本高于当前支持（schemaVersion " + obj.schemaVersion + "）";
+  if(obj.links.some(l=>!l.url)) return "存在缺少 url 的条目";
+  return null;
+}
+function previewImport(obj){
+  const cats = [];
+  for(const c of obj.categories){
+    if(cats.some(x=>x.name.trim().toLowerCase()===(c.name||"").trim().toLowerCase())) continue;
+    cats.push(c);
+  }
+  const existCatNames = new Set(data.categories.map(c=>c.name.trim().toLowerCase()));
+  const newCats = cats.filter(c=>!existCatNames.has((c.name||"").trim().toLowerCase())).length;
+  const newLinks = obj.links.length;
+  const dupLinks = 0;
+  return {newCats, newLinks, dupLinks};
+}
+function doImport(obj, mode){
+  const existingCatNames = new Map(data.categories.map(c=>[c.name.trim().toLowerCase(), c]));
+  if(mode === "replace"){
+    data.categories = []; data.links = [];
+  }
+  let addedCats = 0, addedLinks = 0, skipped = 0;
+
+  const catIdMap = new Map();
+  for(const c of obj.categories){
+    const key = (c.name||"").trim().toLowerCase();
+    if(!key) continue;
+    let target = existingCatNames.get(key);
+    if(!target){
+      target = {id:uid("c_"), name:(c.name||"").trim().slice(0,20), order:catOrderNext(), createdAt:nowISO()};
+      data.categories.push(target); existingCatNames.set(key,target); addedCats++;
+    }
+    catIdMap.set(c.id, target.id);
+  }
+  for(const l of obj.links){
+    const cid = l.categoryId ? (catIdMap.get(l.categoryId) || (data.categories.find(x=>x.id===l.categoryId)?.id ?? null)) : null;
+    const key = normUrl(l.url);
+    const dup = data.links.some(x=> (x.categoryId??null)===(cid??null) && normUrl(x.url)===key);
+    if(dup){ skipped++; continue; }
+    data.links.push({
+      id:uid("l_"), categoryId:cid, url:l.url, title:(l.title||"").slice(0,120), note:(l.note||"").slice(0,120),
+      order:linkOrderNext(cid), createdAt:l.createdAt||nowISO(), updatedAt:l.updatedAt||nowISO()
+    });
+    addedLinks++;
+  }
+  touch(true); renderAll();
+  return {addedCats, addedLinks, skipped};
+}
+
+function openImportPreview(obj, fileName){
+  openModal("#dlgConfirm");
+  $("#cfTitle").textContent = "导入预览";
+  const p = previewImport(obj);
+  $("#cfText").innerHTML = `<span style="color:var(--ink)">${esc(fileName)}</span><br>
+    新增分类 <b>${p.newCats}</b> 个 · 导入网址 <b>${p.newLinks}</b> 条 · 重复将跳过`;
+  $("#cfActions").innerHTML = "";
+  const mk = (label, primary, fn)=>{
+    const b = document.createElement("button");
+    b.className = "tbtn" + (primary?" primary":""); b.textContent = label; b.onclick = fn;
+    $("#cfActions").appendChild(b);
+  };
+  mk("取消", false, ()=>closeModal("#dlgConfirm"));
+  mk("覆盖导入", false, ()=>{
+    snapAdd("导入前");
+    const r = doImport(obj, "replace");
+    closeModal("#dlgConfirm"); toast(`覆盖导入完成：${r.addedLinks} 条`); $("#dlgData").classList.remove("open");
+  });
+  mk("合并导入", true, ()=>{
+    snapAdd("导入前");
+    const r = doImport(obj, "merge");
+    closeModal("#dlgConfirm"); toast(`合并完成：新增 ${r.addedLinks} 条，跳过 ${r.skipped} 条`); $("#dlgData").classList.remove("open");
+  });
+}
+
+// ============================================================
+// 落盘（File System Access）
+// ============================================================
+let dirHandle = null;
+let autosaveTimer = null;
+const hasFS = () => typeof window.showDirectoryPicker === "function";
+
+async function pickDir(){
+  if(!hasFS()){ toast("当前浏览器不支持目录写入，请用导出或 GitHub 同步"); return; }
+  try{
+    dirHandle = await window.showDirectoryPicker({id:"bm-backup", mode:"readwrite", startIn:"downloads"});
+    settings.dirName = dirHandle.name; settings.dirty = true; persistSettings();
+    $("#dirHelp").textContent = `已授权：${dirHandle.name}`;
+    await writeAuto();
+    toast("已授权备份文件夹");
+  }catch(e){
+    if(e && e.name === "AbortError") return;
+    toast("无法获得目录权限");
+  }
+}
+async function writeAuto(){
+  if(!dirHandle || !hasFS()) return false;
+  try{
+    const perm = await dirHandle.queryPermission({mode:"readwrite"});
+    if(perm !== "granted"){
+      const req = await dirHandle.requestPermission({mode:"readwrite"});
+      if(req !== "granted") throw new Error("perm");
+    }
+    const fh = await dirHandle.getFileHandle("bookmarks-autosave.json", {create:true});
+    const w = await fh.createWritable();
+    await w.write(JSON.stringify({
+      schemaVersion:1, app:"local-bookmarks", exportedAt:nowISO(),
+      categories:data.categories, links:data.links
+    }, null, 2));
+    await w.close();
+    settings.lastWrittenAt = Date.now(); settings.dirty = false;
+    persistSettings(); renderStatus();
+    return true;
+  }catch(e){
+    settings.lastError = "落盘失败";
+    renderStatus();
+    return false;
+  }
+}
+function scheduleAutosave(){
+  if(!dirHandle) return;
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(()=>{ writeAuto(); }, 1500);
+}
+
+// ============================================================
+// GitHub 同步
+// ============================================================
+const GH = {
+  api(owner, repo, path){ return `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path).replace(/%2F/g,"/")}`; },
+  headers(token){
+    return { "Authorization":`Bearer ${token}`, "Accept":"application/vnd.github+json", "Content-Type":"application/json" };
+  }
+};
+function b64enc(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = ""; for(const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+function b64dec(b64){
+  const bin = atob((b64||"").replace(/\s/g,""));
+  const bytes = Uint8Array.from(bin, c=>c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+function ghConf(){ const g = settings.github; return {owner:g.owner.trim(), repo:g.repo.trim(), path:(g.path||"bookmarks.json").trim(), token:g.token.trim()}; }
+function ghReady(){
+  const c = ghConf();
+  return settings.github.enabled && c.owner && c.repo && c.token;
+}
+
+async function ghGet(){
+  const c = ghConf();
+  const r = await fetch(GH.api(c.owner,c.repo,c.path), {headers:GH.headers(c.token), cache:"no-store"});
+  if(r.status === 404) return {exists:false, sha:null, data:null};
+  if(r.status === 401 || r.status === 403) throw new Error("auth");
+  if(!r.ok) throw new Error("http:" + r.status);
+  const j = await r.json();
+  const text = j.content ? b64dec(j.content) : "";
+  let obj = null;
+  try{ obj = JSON.parse(text); }catch(e){ throw new Error("badjson"); }
+  return {exists:true, sha:j.sha, data:obj};
+}
+async function ghPut(obj, sha, message){
+  const c = ghConf();
+  const body = { message, content: b64enc(JSON.stringify(obj,null,2)), branch:"main" };
+  if(sha) body.sha = sha;
+  const r = await fetch(GH.api(c.owner,c.repo,c.path), {
+    method:"PUT", headers:GH.headers(c.token), body:JSON.stringify(body)
+  });
+  if(r.status === 409) throw new Error("conflict");
+  if(r.status === 401 || r.status === 403) throw new Error("auth");
+  if(!r.ok){ let t=""; try{ t = (await r.json()).message||""; }catch(e){} throw new Error("http:" + r.status + " " + t); }
+  const j = await r.json();
+  return j.content.sha;
+}
+
+function mergeData(base, local, remote){
+  const out = { categories:[], links:[] };
+  const baseCats = new Map((base?.categories||[]).map(c=>[c.id,c]));
+  const baseLinks = new Map((base?.links||[]).map(l=>[l.id,l]));
+
+  // 分类
+  const remoteCats = new Map(remote.categories.map(c=>[c.id,c]));
+  const localCats = new Map(local.categories.map(c=>[c.id,c]));
+  const catIds = new Set([...localCats.keys(), ...remoteCats.keys(), ...baseCats.keys()]);
+  for(const id of catIds){
+    const L = localCats.get(id), R = remoteCats.get(id), B = baseCats.get(id);
+    if(L && R){
+      out.categories.push(((R.updatedAt||"") > (L.updatedAt||"")) ? {...L, ...R} : {...R, ...L});
+    } else if(L && !R){
+      if(B && (L.name===B.name)) continue; // 远端删除且本地未改
+      out.categories.push(L);
+    } else if(!L && R){
+      if(B && (R.name===B.name)) continue;
+      out.categories.push(R);
+    }
+  }
+  // 保证 order 有效
+  out.categories.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((c,i)=>c.order=(i+1)*100);
+
+  // 条目
+  const remoteLinks = new Map(remote.links.map(l=>[l.id,l]));
+  const localLinks = new Map(local.links.map(l=>[l.id,l]));
+  const linkIds = new Set([...localLinks.keys(), ...remoteLinks.keys(), ...baseLinks.keys()]);
+  for(const id of linkIds){
+    const L = localLinks.get(id), R = remoteLinks.get(id), B = baseLinks.get(id);
+    if(L && R){
+      out.links.push(((R.updatedAt||"") > (L.updatedAt||"")) ? {...L, ...R} : {...R, ...L});
+    } else if(L && !R){
+      if(B && B.updatedAt === L.updatedAt) continue; // 远端删除且本地未改
+      out.links.push(L);
+    } else if(!L && R){
+      if(B && B.updatedAt === R.updatedAt) continue;
+      out.links.push(R);
+    }
+  }
+  // 分类失效的条目落到未分类
+  const valid = new Set(out.categories.map(c=>c.id));
+  out.links.forEach(l=>{ if(l.categoryId && !valid.has(l.categoryId)) l.categoryId = null; });
+  out.links.sort((a,b)=>(a.order||0)-(b.order||0));
+  return out;
+}
+
+function applyRemote(obj){
+  const incoming = {
+    schemaVersion:1,
+    categories:(obj.categories||[]).map(c=>({id:c.id,name:c.name,order:+c.order||0,createdAt:c.createdAt||nowISO(),updatedAt:c.updatedAt||nowISO()})),
+    links:(obj.links||[]).map(l=>({id:l.id,categoryId:l.categoryId??null,url:l.url,title:l.title||"",note:l.note||"",
+      order:+l.order||0,createdAt:l.createdAt||nowISO(),updatedAt:l.updatedAt||nowISO()}))
+  };
+  const merged = mergeData(settings.github.baseData, data, incoming);
+  data = merged;
+  settings.github.baseData = JSON.parse(JSON.stringify(merged));
+  persist(true); renderAll();
+}
+
+async function doPull(silent){
+  if(!ghReady()) return false;
+  try{
+    const r = await ghGet();
+    settings.lastError = "";
+    if(!r.exists){ if(!silent) toast("远端还没有文件，首次同步会创建"); return false; }
+    const remoteTime = r.data.exportedAt || "";
+    applyRemote(r.data);
+    settings.github.remoteSha = r.sha;
+    persistSettings();
+    if(!silent) toast("已拉取并合并");
+    return true;
+  }catch(e){
+    const m = e.message==="auth" ? "授权失效" : e.message==="badjson" ? "远端文件不是有效 JSON" : e.message==="failed to fetch" ? "网络或跨域失败" : e.message;
+    settings.lastError = "同步失败：" + m; renderStatus();
+    if(!silent) toast("同步失败：" + m);
+    return false;
+  }
+}
+
+async function doPush(manual){
+  if(!ghReady()){ toast("请先配置并启用同步"); return false; }
+  try{
+    let r = await ghGet();
+    let sha = r.exists ? r.sha : null;
+    if(r.exists && r.data){ applyRemote(r.data); }
+    const payload = {
+      schemaVersion:1, app:"local-bookmarks", exportedAt:nowISO(),
+      categories:data.categories, links:data.links
+    };
+    try{
+      sha = await ghPut(payload, sha, `同步 ${today()}`);
+    }catch(e){
+      if(e.message !== "conflict") throw e;
+      // 冲突：重拉 → 合并 → 重试一次
+      const again = await ghGet();
+      if(again.exists && again.data) applyRemote(again.data);
+      const retry = { schemaVersion:1, app:"local-bookmarks", exportedAt:nowISO(), categories:data.categories, links:data.links };
+      sha = await ghPut(retry, again.sha, `同步 ${today()}（合并）`);
+      toast("远端有改动，已合并后提交");
+    }
+    settings.github.lastPushedDate = today();
+    settings.github.baseData = JSON.parse(JSON.stringify({categories:data.categories, links:data.links}));
+    settings.github.remoteSha = sha;
+    settings.dirty = false; settings.lastError = "";
+    persistSettings(); renderStatus();
+    if(manual) toast("已同步");
+    return true;
+  }catch(e){
+    const m = e.message==="auth" ? "授权失效" : e.message==="failed to fetch" ? "网络或跨域失败" : e.message;
+    settings.lastError = "同步失败：" + m; renderStatus();
+    if(manual) toast("同步失败：" + m);
+    return false;
+  }
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+function seedIfEmpty(){
+  if(data.links.length || data.categories.length) return;
+  data.categories = [
+    {id:"c_work", name:"工作", order:100, createdAt:nowISO()},
+    {id:"c_tool", name:"工具", order:200, createdAt:nowISO()},
+    {id:"c_read", name:"阅读", order:300, createdAt:nowISO()}
+  ];
+  data.links = [
+    {id:"l_1", categoryId:"c_work", url:"https://open.feishu.cn", title:"飞书开放平台", note:"接口文档，常查", order:100, createdAt:nowISO(), updatedAt:nowISO()},
+    {id:"l_2", categoryId:"c_work", url:"https://www.figma.com", title:"Figma 团队文件", note:"", order:200, createdAt:nowISO(), updatedAt:nowISO()},
+    {id:"l_3", categoryId:"c_work", url:"https://www.axure.com", title:"Axure 原型库", note:"", order:300, createdAt:nowISO(), updatedAt:nowISO()},
+    {id:"l_4", categoryId:"c_tool", url:"https://umeng.com", title:"友盟控制台", note:"数据看板", order:100, createdAt:nowISO(), updatedAt:nowISO()},
+    {id:"l_5", categoryId:"c_tool", url:"https://lbs.amap.com", title:"高德开放平台", note:"", order:200, createdAt:nowISO(), updatedAt:nowISO()},
+    {id:"l_6", categoryId:"c_read", url:"https://sspai.com", title:"少数派", note:"每周翻一次", order:100, createdAt:nowISO(), updatedAt:nowISO()},
+    {id:"l_7", categoryId:null, url:"https://developer.mozilla.org", title:"MDN Web 文档", note:"", order:100, createdAt:nowISO(), updatedAt:nowISO()}
+  ];
+  persist(true);
+}
+
+function bind(){
+  $("#search").addEventListener("input", e=> setSearch(e.target.value));
+  $("#searchClear").onclick = ()=> setSearch("");
+  $("#btnAdd").onclick = ()=> openLink(null);
+  $("#btnData").onclick = ()=> openDataPanel();
+  $("#btnSync").onclick = ()=> openSyncPanel();
+
+  $("#themePick").addEventListener("click", e=>{
+    const b = e.target.closest("button[data-theme]"); if(!b) return;
+    setTheme(b.dataset.theme);
+  });
+
+  // 侧栏
+  $("#btnNewCat").onclick = ()=>{ $("#newcatBox").hidden = false; $("#newcatInput").focus(); };
+  $("#newcatInput").addEventListener("keydown", e=>{
+    if(e.key === "Enter"){ if(newCategory(e.target.value)){ e.target.value=""; $("#newcatBox").hidden = true; } }
+    if(e.key === "Escape"){ e.target.value=""; $("#newcatBox").hidden = true; }
+  });
+  $("#newcatInput").addEventListener("blur", e=>{
+    if(e.target.value.trim() && newCategory(e.target.value)){ e.target.value=""; $("#newcatBox").hidden=true; }
+  });
+
+  $("#catlist").addEventListener("click", e=>{
+    const row = e.target.closest(".cat-row"); if(!row) return;
+    if(suppressClick) return;
+    if(row.dataset.view === "all") setView({type:"all",id:null,query:""});
+    else if(row.dataset.view === "uncat") setView({type:"uncat",id:null,query:""});
+    else if(row.dataset.cat) setView({type:"cat",id:row.dataset.cat,query:""});
+  });
+  $("#catlist").addEventListener("dblclick", e=>{
+    const nm = e.target.closest(".nm"); const row = nm?.closest(".cat-row[data-cat]");
+    if(!row) return;
+    const id = row.dataset.cat;
+    const input = document.createElement("input");
+    input.value = nm.textContent; input.style.cssText="width:100%;border:none;background:transparent;outline:none;font:inherit;color:inherit";
+    nm.replaceWith(input); input.focus(); input.select();
+    const commit = ()=>{ const v = input.value; input.replaceWith(Object.assign(document.createElement("span"),{className:"nm",textContent:v})); if(v.trim()) renameCategory(id, v); };
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", ev=>{
+      if(ev.key==="Enter"){ ev.preventDefault(); commit(); }
+      if(ev.key==="Escape"){ ev.preventDefault(); input.value = nm.textContent; commit(); }
+    });
+  });
+  $("#catlist").addEventListener("pointerdown", e=>{
+    const row = e.target.closest(".cat-row[data-cat]");
+    if(!row) return;
+    if(e.target.closest(".nm") && e.detail > 1) return;
+    startDrag(e, "cat", row.dataset.cat, row);
+  });
+  $("#catlist").addEventListener("contextmenu", e=>{
+    const row = e.target.closest(".cat-row[data-cat]"); if(!row) return;
+    e.preventDefault();
+    const id = row.dataset.cat;
+    confirmDialog("分类操作", row.querySelector(".nm").textContent, [
+      {label:"删除分类", danger:true, act:()=>{ closeModal("#dlgConfirm"); deleteCategory(id); }},
+      {label:"取消", act:()=>closeModal("#dlgConfirm")}
+    ]);
+  });
+
+  // 卡片
+  $("#grid").addEventListener("click", e=>{
+    const card = e.target.closest(".card"); if(!card) return;
+    const id = card.dataset.id;
+    if(e.target.closest("[data-act=edit]")){ openLink(id); return; }
+    if(e.target.closest("[data-act=del]")){ deleteLink(id); return; }
+    if(suppressClick) return;
+    const l = data.links.find(x=>x.id===id);
+    if(l) window.open(l.url, "_blank", "noopener");
+  });
+  $("#grid").addEventListener("pointerdown", e=>{
+    const card = e.target.closest(".card"); if(!card) return;
+    if(e.target.closest(".ops")) return;
+    if(view.type === "search") return;
+    startDrag(e, "link", card.dataset.id, card);
+  });
+  $("#grid").addEventListener("keydown", e=>{
+    const card = e.target.closest(".card");
+    if(card && e.key === "Enter"){ const l = data.links.find(x=>x.id===card.dataset.id); if(l) window.open(l.url,"_blank","noopener"); }
+  });
+
+  // 弹层关闭
+  $$(".modal").forEach(m=>{
+    m.addEventListener("click", e=>{
+      if(e.target === m) {
+        if(m.id === "dlgLink" || m.id === "dlgData" || m.id === "dlgSync") { m.classList.remove("open"); }
+        else closeModal("#"+m.id);
+      }
+    });
+    m.addEventListener("keydown", e=>{
+      if(e.key === "Escape"){ e.stopPropagation(); m.classList.remove("open"); }
+    });
+  });
+  $$("[data-close]").forEach(b=> b.onclick = ()=> b.closest(".modal").classList.remove("open"));
+
+  $("#btnSaveLink").onclick = saveLink;
+  $("#fUrl").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); saveLink(); } });
+
+  // 数据面板
+  $("#btnExport").onclick = ()=> exportJSON(false);
+  $("#btnImport").onclick = ()=> $("#fileImport").click();
+  $("#fileImport").addEventListener("change", async e=>{
+    const f = e.target.files?.[0]; if(!f) return;
+    try{
+      const txt = await f.text();
+      const obj = JSON.parse(txt);
+      const err = validateImport(obj);
+      if(err){ toast("导入失败：" + err); return; }
+      openImportPreview(obj, f.name);
+    }catch(err){ toast("导入失败：不是有效 JSON"); }
+    e.target.value = "";
+  });
+  $("#btnPickDir").onclick = pickDir;
+
+  // 同步面板
+  $("#syncOn").onchange = ()=>{
+    settings.github.enabled = $("#syncOn").checked;
+    persistSettings(); renderStatus(); renderSyncState();
+  };
+  ["sOwner","sRepo","sPath","sToken"].forEach(id=>{
+    const el = $("#"+id);
+    el.addEventListener("change", ()=>{
+      const map = {sOwner:"owner",sRepo:"repo",sPath:"path",sToken:"token"};
+      settings.github[map[id]] = el.value.trim();
+      persistSettings(); renderSyncState();
+    });
+  });
+  $("#btnSyncPull").onclick = ()=> doPull(false);
+  $("#btnSyncPush").onclick = async ()=>{
+    saveSyncForm();
+    await doPush(true);
+    renderSyncState();
+  };
+}
+
+function saveSyncForm(){
+  settings.github.owner = $("#sOwner").value.trim();
+  settings.github.repo = $("#sRepo").value.trim();
+  settings.github.path = $("#sPath").value.trim() || "bookmarks.json";
+  settings.github.token = $("#sToken").value.trim();
+  settings.github.enabled = $("#syncOn").checked;
+  persistSettings();
+}
+
+// ============================================================
+// 面板渲染
+// ============================================================
+async function openDataPanel(){
+  openModal("#dlgData");
+  $("#dirHelp").textContent = hasFS()
+    ? (settings.dirName ? `已授权：${settings.dirName}` : "仅 Chrome / Edge 支持目录写入；未授权时用导出。")
+    : "当前浏览器不支持目录写入，请用导出或 GitHub 同步。";
+  $("#exportHelp").textContent = settings.lastWrittenAt ? `上次导出 ${fmtTime(settings.lastWrittenAt)}` : "文件名：网址收藏-日期-时分.json";
+  const snaps = await snapAll();
+  const el = $("#snapList");
+  if(!snaps.length){ el.innerHTML = `<div class="line"><span class="k">还没有快照</span></div>`; return; }
+  el.innerHTML = snaps.map(s=>{
+    let n = 0, c = 0;
+    try{ const d = JSON.parse(s.data); c = (d.categories||[]).length; n = (d.links||[]).length; }catch(e){}
+    const bad = !n && !c;
+    return `<div class="snap-item ${bad?'disabled':''}">
+      <div class="info"><b>${s.reason}</b> · ${n} 条 · ${c} 个分类<div class="t">${fmtTime(s.at)}</div></div>
+      <button data-snap="${s.id}" ${bad?'disabled':''}>恢复</button>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("button[data-snap]").forEach(b=>{
+    b.onclick = ()=> restoreSnapshot(Number(b.dataset.snap));
+  });
+}
+async function restoreSnapshot(id){
+  const all = await snapAll();
+  const s = all.find(x=>x.id===id); if(!s) return;
+  let obj; try{ obj = JSON.parse(s.data); }catch(e){ toast("快照已损坏"); return; }
+  const cur = {links:data.links.length, cats:data.categories.length};
+  confirmDialog("恢复快照", `将覆盖当前数据（${cur.links} 条 / ${cur.cats} 个分类），恢复前会先为当前数据存一份快照。`, [
+    {label:"恢复", primary:true, act:()=>{
+      snapAdd("恢复前");
+      data = {schemaVersion:1, categories:obj.categories||[], links:obj.links||[]};
+      touch(true); renderAll(); closeModal("#dlgConfirm"); $("#dlgData").classList.remove("open");
+      toast("已恢复快照");
+    }},
+    {label:"取消", act:()=>closeModal("#dlgConfirm")}
+  ]);
+}
+
+function renderSyncState(){
+  const el = $("#syncState"); if(!el) return;
+  const g = settings.github;
+  const rows = [
+    ["状态", g.enabled ? "已启用" : "未启用"],
+    ["上次推送", g.lastPushedDate || "—"],
+    ["远端版本", g.remoteSha ? g.remoteSha.slice(0,7) : "—"],
+    ["本机改动", settings.dirty ? "有未同步改动" : "无"],
+    ["上次错误", settings.lastError || "—"]
+  ];
+  el.innerHTML = rows.map(([k,v])=>`<div class="line"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("");
+}
+function openSyncPanel(){
+  const g = settings.github;
+  $("#syncOn").checked = !!g.enabled;
+  $("#sOwner").value = g.owner || "";
+  $("#sRepo").value = g.repo || "";
+  $("#sPath").value = g.path || "bookmarks.json";
+  $("#sToken").value = g.token || "";
+  renderSyncState();
+  openModal("#dlgSync");
+}
+
+
+
+// ============================================================
+// 主题
+// ============================================================
+function setTheme(t){
+  document.documentElement.dataset.theme = t;
+  settings.theme = t; persistSettings();
+  $$("#themePick button").forEach(b=>b.classList.toggle("on", b.dataset.theme===t));
+}
+
+// ============================================================
+// 启动
+// ============================================================
+async function tryRestoreDir(){
+  // File System Access 的句柄无法跨会话自动恢复，需用户重新选择
+}
+async function autoSyncOnBoot(){
+  if(!ghReady()) return;
+  // 拉取：每次启动
+  await doPull(true);
+  // 推送：跨自然日且本地有变更
+  if(settings.dirty && settings.github.lastPushedDate !== today()){
+    await doPush(false);
+  }
+  renderSyncState();
+}
+
+async function init(){
+  load();
+  const qp = new URLSearchParams(location.search);
+  if(qp.get("theme")) settings.theme = qp.get("theme");
+  seedIfEmpty();
+  setTheme(settings.theme || "swiss");
+  renderAll();
+  bind();
+  renderStatus();
+
+  // 若开启同步，后台执行一次
+  if(ghReady()) setTimeout(autoSyncOnBoot, 1200);
+
+  // 键盘：Esc 关闭弹层焦点恢复
+  window.addEventListener("keydown", e=>{
+    if(e.key === "Escape"){
+      $$(".modal.open").forEach(m=>m.classList.remove("open"));
+    }
+  });
+}
+init();
+</script>
+</body>
+</html>
